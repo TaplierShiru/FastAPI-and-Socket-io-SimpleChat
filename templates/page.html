@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+    <body>
+        <input id="user_name" type="text" value="unknown user">
+        <input id="id1" type="text" value="world">
+        <button type="button" onclick="socket.emit('message', $('#id1').val())">Emit</button>
+        <br>
+        <textarea id="id2" style="width: 300px; height: 300px"></textarea>
+        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <script>
+                const socket = io('http://127.0.0.1:8000');
+                socket.on("response", function (data) {
+                    $('#id2').val($('#id2').val() + '\n' + $('#user_name').val() + '->' + data)
+                });
+
+        </script>
+    </body>
+</html>

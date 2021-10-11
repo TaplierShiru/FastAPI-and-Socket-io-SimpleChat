@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Chat | socket.io</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" type="text/css" href="/static/styles.css" />
+    </head>
+    <body>
+        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+        <input id="user_name" autocomplete="off" value="unknown" />
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="message" autocomplete="off" />
+            <button>Send</button>
+        </form>
+        <script>
+            const socket = io({ path: "/sio/socket.io" });
+
+            socket.on("connect", () =>{
+                console.log("Connected!");
+                socket.emit("who_are_you", $('#user_name').val());
+            });
+
+            socket.on("disconnect", () =>{
+                console.log("Lost connection to the server!");
+            });
+
+            $("#form").submit( event => {
+                event.preventDefault();
+                socket.emit("message", $('#user_name').val() + ":   " + $("#message").val());
+                $("#message").value = "";
+                return false;
+            });
+            
+            socket.on("response", message => {
+                console.log("response:", message);
+                var new_li = $(`<li style="display: none;"></li>`).text(message);
+                $("#messages").append(new_li);
+                new_li.show("slow");
+            });
+
+        </script>
+    </body>
+</html>
