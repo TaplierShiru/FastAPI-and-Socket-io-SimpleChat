@@ -29,3 +29,4 @@ wcwidth==0.2.5
 dnspython==1.16.0
 greenlet==1.1.0
 eventlet==0.31.0
+python-socketio==5.4.0
