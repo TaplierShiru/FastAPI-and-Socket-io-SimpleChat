@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
+
 templates = Jinja2Templates(directory="templates")
 sio = socketio.AsyncServer(async_mode='asgi') # cors_allowed_origins='*',
 app = FastAPI()
@@ -22,16 +23,21 @@ async def connect(sid, environ, auth=None):
 
 @sio.on('message')
 async def chat_message(sid, data):
-    print("message ", data)
+    session_data = await sio.get_session(sid)
+    print(f"username={session_data['username']}, message={data}")
     await sio.emit('response', data)
 
-USER_SID2NAME = {}
 
 @sio.on('who_are_you')
 async def identify_user(sid, data):
-    global USER_SID2NAME
-    USER_SID2NAME[str(sid)] = data
+    await sio.save_session(sid, {'username': data})
     print('sid: ', sid, ' is a user: ', data)
+
+
+@sio.on("change_nickname")
+async def change_nickname(sid, data):
+    await sio.save_session(sid, {'username': data})
+    print(f'new nickname={data}')
 
 
 @sio.event
