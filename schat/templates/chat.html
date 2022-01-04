@@ -51,22 +51,43 @@
     <script>
         $(document).ready(function(){
             var current_user;
-            $.get("/api/current_user",function(response){
+            $.get("/api/user",function(response){
                 current_user = response;
                 $("#profile").text(current_user);
             });
             var receiver = "";
             // create websocket
-            const socket = io('http://127.0.0.1:8000/api/chat');
+            const socket = io({ path: "/sio/socket.io" });
+
+            socket.on("connect", () =>{
+                console.log("Connected!");
+                socket.emit("who_are_you", current_user);
+            });
+
+            socket.on("disconnect", () =>{
+                console.log("Lost connection to the server!");
+            });
+
             socket.on("response", function (data) {
                 var parent = $("#messages");
+                console.log(data);
                 var sender = data['sender'];
                 if (sender == current_user)
                     sender = "You";
                 var message = data['message']
                 var content = "<p><strong>"+sender+" </strong> <span> "+message+"</span></p>";
-                parent.append(content);
-                // $('#id2').val($('#id2').val() + '\n' + $('#user_name').val() + '->' + data)
+                var new_li = $(`<li style="display: none;" class="single-mess"></li>`).append(
+                       "<p><strong>"+sender+" </strong> <span> "+message+"</span></p>"
+                );
+                $("#messages").append(new_li);
+                new_li.show("slow");
+                if ($(".single-mess").length >= 10){
+                    $(".single-mess:first-child").animate(
+                        { height: "-0px" },
+                        "slow",
+                        function(){ $(this).remove(); }
+                    );
+                }
             });
 
             $("#chat-form").on("submit", function(e){
@@ -77,9 +98,10 @@
                         "sender": current_user,
                         "message": message
                     };
-                    socket.send(JSON.stringify(data));
+                    //socket.send(JSON.stringify(data));
+                    socket.emit("message", data);
                     $("input").val("");
-                    document.cookie = 'X-Authorization=; path=/;';
+                    //document.cookie = 'X-Authorization=; path=/;';
                 }
             });
         });
@@ -90,8 +112,8 @@
         <div class="card-body">
             <strong id="profile"></strong><h4 class="card-title text-center"> Chat App </h4>
             <hr>
-            <div id="messages">
-            </div>
+            <ul id="messages">
+            </ul>
             <form class="form-inline" id="chat-form">
                 <input type="text" class="form-control" placeholder="Write your message">
                 <button id="send" type="submit" class="btn btn-primary">Send</button>

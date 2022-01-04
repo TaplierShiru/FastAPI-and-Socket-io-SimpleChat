@@ -21,6 +21,5 @@ Tested on Windows 10, Python 3.8, Browser - Microsoft Edge
 In the `FastAPI-and-Socket-io-SimpleChat` folder, write next command:
 ```
 pip install -r requirements.txt
-
 ```
 

@@ -36,16 +36,54 @@
 <script>
         $(document).ready(function(){
             $("#user-form").on("submit", function(e){
-                e.preventDefault();
-                var current_user = $("#user_input").val();
-                if (current_user){
-                    data = {"username": current_user};
-                    $.post('/api/register', JSON.stringify(data), function(response){
+                //e.preventDefault();
+                //let current_user = true; // $("#user_input").val();
+                //if (current_user){ }
+                    //data = { "username": current_user};
+                    // JSON.stringify(data)
+                    /*
+                    $.post('/api/register', {"username": "test"}, function(response){
                         $(".chat-body").removeClass("hide");
                         $(".chat-register").addClass("hide");
                         window.location.href = "/chat";
                     });
+                    */
+                    /*
+                    $.ajax({
+                        url: "/api/register",
+                        async: true,
+                        type: "post",
+                        dataType: 'json',
+                        data: JSON.stringify({"username": "WORK!"}),
+                        success: function(response){
+                            //$(".chat-body").removeClass("hide");
+                            //$(".chat-register").addClass("hide");
+                            //window.location.href = "/chat";
+                            console.log(response)
+                        },
+                        error: function (xhr, resp, text){
+                            console.log(xhr, resp, text);
+                        }
+                    })
+                    */
+                let user_data = {"username": $("#user_input").val()};
+                fetch("/api/register", {
+                    method: 'POST',
+                    body: JSON.stringify(user_data),
+                    headers: {"content-type": "application/json"},
+                    dataType: 'json'
                 }
+                ).then(function(responses) {
+                    return responses.json();
+                }).then(data => {
+                    console.log(data);
+                    $(".chat-body").removeClass("hide");
+                    $(".chat-register").addClass("hide");
+                    window.location.href = "/chat";
+                }).catch(error => {
+                    console.log(error);
+                });
+
             });
         });
     </script>
