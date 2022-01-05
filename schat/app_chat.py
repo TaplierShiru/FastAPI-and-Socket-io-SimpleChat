@@ -82,7 +82,7 @@ def get_user(request: Request):
 async def register_user(user: RegisterValidator, response: Response):
     response.set_cookie(key=X_AUTHORIZATION, value=user.username, httponly=True)
     log.debug(f"User register with username={user.username}")
-    return user
+    return user.json()
 
 
 @app.get('/')
@@ -93,11 +93,3 @@ def get_home(request: Request):
 @app.get('/chat', response_class=HTMLResponse)
 def get_chat(request: Request):
     return templates.TemplateResponse("chat.html", {"request": request})
-
-
-@app.get("/hello", response_class=HTMLResponse)
-def main_func(request: Request):
-    return templates.TemplateResponse(
-        "page.html",
-        {"request": request}
-    )
