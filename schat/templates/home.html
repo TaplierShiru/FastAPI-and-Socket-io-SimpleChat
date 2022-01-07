@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>ChatApp</title>
-    <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://ru.vuejs.org/js/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         .card {
             position: absolute;
@@ -33,70 +32,44 @@
         }
     </style>
 </head>
-<script>
-        $(document).ready(function(){
-            $("#user-form").on("submit", function(e){
-                //e.preventDefault();
-                //let current_user = true; // $("#user_input").val();
-                //if (current_user){ }
-                    //data = { "username": current_user};
-                    // JSON.stringify(data)
-                    /*
-                    $.post('/api/register', {"username": "test"}, function(response){
-                        $(".chat-body").removeClass("hide");
-                        $(".chat-register").addClass("hide");
-                        window.location.href = "/chat";
-                    });
-                    */
-                    /*
-                    $.ajax({
-                        url: "/api/register",
-                        async: true,
-                        type: "post",
-                        dataType: 'json',
-                        data: JSON.stringify({"username": "WORK!"}),
-                        success: function(response){
-                            //$(".chat-body").removeClass("hide");
-                            //$(".chat-register").addClass("hide");
-                            //window.location.href = "/chat";
-                            console.log(response)
-                        },
-                        error: function (xhr, resp, text){
-                            console.log(xhr, resp, text);
-                        }
-                    })
-                    */
-                let user_data = {"username": $("#user_input").val()};
-                fetch("/api/register", {
-                    method: 'POST',
-                    body: JSON.stringify(user_data),
-                    headers: {"content-type": "application/json"},
-                    dataType: 'json'
-                }
-                ).then(function(responses) {
-                    return responses.json();
-                }).then(data => {
-                    console.log(data);
-                    $(".chat-body").removeClass("hide");
-                    $(".chat-register").addClass("hide");
-                    window.location.href = "/chat";
-                }).catch(error => {
-                    console.log(error);
-                });
-
-            });
-        });
-    </script>
 <body>
     <div class="chat-body card">
         <div class="card-body">
             <h4 class="card-title text-center"> Chat App </h4>
             <hr>
             <form class="form-inline" id="user-form">
-                <input type="text" class="form-control" id="user_input" placeholder="Enter your name">
-                <button id="start" type="submit" class="btn btn-primary">Start Chat</button>
+                <input v-model="nickname" type="text" class="form-control" placeholder="Enter your name">
+                <button type="button" @click="startChat">Start Chat</button>
             </form>
         </div>
     </div>
+
+<script>
+
+    let vue_enter_form_handler = new Vue({
+        el: "#user-form",
+        props: {
+           nickname: String
+        },
+        methods: {
+           startChat: function(){
+               // Register user in the system...
+               console.log(`Start to register user with nickname=${this.nickname}...`);
+               axios.post("/api/register", {
+                   username: this.nickname
+               }).then((responses) => {
+                   console.log(responses);
+                   return responses;
+               }).then(data => {
+                    console.log(data);
+                    window.location.href = "/chat";
+               }).catch((error) => {
+                   console.log(error);
+               })
+           }
+        },
+        delimiters: ['[[',']]']
+    });
+</script>
 </body>
 </html>

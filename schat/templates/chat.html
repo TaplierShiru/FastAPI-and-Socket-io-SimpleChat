@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>ChatApp</title>
-    <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://ru.vuejs.org/js/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet" type="text/css">
     <style>
         .card {
             position: absolute;
@@ -48,77 +45,105 @@
             left: 20px;
         }
     </style>
-    <script>
-        $(document).ready(function(){
-            var current_user;
-            $.get("/api/user",function(response){
-                current_user = response;
-                $("#profile").text(current_user);
-            });
-            var receiver = "";
-            // create websocket
-            const socket = io({ path: "/sio/socket.io" });
-
-            socket.on("connect", () =>{
-                console.log("Connected!");
-                socket.emit("who_are_you", current_user);
-            });
-
-            socket.on("disconnect", () =>{
-                console.log("Lost connection to the server!");
-            });
-
-            socket.on("response", function (data) {
-                var parent = $("#messages");
-                console.log(data);
-                var sender = data['sender'];
-                if (sender == current_user)
-                    sender = "You";
-                var message = data['message']
-                var content = "<p><strong>"+sender+" </strong> <span> "+message+"</span></p>";
-                var new_li = $(`<li style="display: none;" class="single-mess"></li>`).append(
-                       "<p><strong>"+sender+" </strong> <span> "+message+"</span></p>"
-                );
-                $("#messages").append(new_li);
-                new_li.show("slow");
-                if ($(".single-mess").length >= 10){
-                    $(".single-mess:first-child").animate(
-                        { height: "-0px" },
-                        "slow",
-                        function(){ $(this).remove(); }
-                    );
-                }
-            });
-
-            $("#chat-form").on("submit", function(e){
-                e.preventDefault();
-                var message = $("input").val();
-                if (message){
-                    data = {
-                        "sender": current_user,
-                        "message": message
-                    };
-                    //socket.send(JSON.stringify(data));
-                    socket.emit("message", data);
-                    $("input").val("");
-                    //document.cookie = 'X-Authorization=; path=/;';
-                }
-            });
-        });
-    </script>
 </head>
 <body>
     <div class="chat-body card">
         <div class="card-body">
-            <strong id="profile"></strong><h4 class="card-title text-center"> Chat App </h4>
+            <strong id="profile">[[ username ]]</strong><h4 class="card-title text-center"> Chat App </h4>
             <hr>
-            <ul id="messages">
-            </ul>
+            <div id="messages"><ul style="list-style: none;">
+                <transition-group name="custom-enter-transition" enter-active-class="animate__animated animate__bounceInUp"
+                    class="pop-up-message-transition"
+                >
+                <li class="single-mess" v-for="(user_s, index) in users_info" v-bind:key="`key-${index}`">
+                    <p><strong>[[ user_s.nickname ]]</strong> <span>[[ user_s.text ]]</span></p>
+                </li></transition-group>
+            </ul></div>
             <form class="form-inline" id="chat-form">
-                <input type="text" class="form-control" placeholder="Write your message">
-                <button id="send" type="submit" class="btn btn-primary">Send</button>
+                <input v-model="message" type="text" class="form-control" placeholder="Write your message">
+                <button type="button" @click="sendMessage">Send</button>
             </form>
         </div>
     </div>
+    <script>
+
+        const socket = io({ path: "/sio/socket.io" });
+
+        async function get_usernick(){
+            current_user = await axios.get("/api/user").then((response) => {return response['data']});
+            return current_user;
+        }
+
+        socket.on("connect", async () =>{
+            console.log("Connected!");
+            socket.emit("who_are_you", await current_user);
+        });
+
+        socket.on("disconnect", () =>{
+            console.log("Lost connection to the server!");
+        });
+
+        let vue_messages_handler = new Vue({
+            el: "#messages",
+            data: {
+                users_info: [
+                    {nickname: "Pite", text: "Blalala"},
+                    {nickname: "Qwe",  text: "23sss"},
+                ]
+            },
+            methods:{
+                addMessage: function(nickname, text){
+                    this.users_info.push({
+                        nickname: nickname,
+                        text: text
+                    });
+                }
+            },
+            delimiters: ['[[',']]']
+        });
+
+        let vue_profile_handler = new Vue({
+            el: '#profile',
+            data: {
+                username: "unknown"
+            },
+            created: function(event) {
+                this.$nextTick(async () => {
+                    this.username = await get_usernick();
+                })
+            },
+            delimiters: ['[[',']]']
+        })
+
+        socket.on("response",async function (data){
+            console.log("Response... with data=" + JSON.stringify(data));
+            let sender = data['sender'];
+            if (sender == await get_usernick())
+                sender = 'You';
+            let message = data['message'];
+            console.log("Message=" + message);
+            vue_messages_handler.addMessage(sender, message);
+            console.log(vue_messages_handler.users_info);
+        });
+
+        let vue_handler = new Vue({
+            el: "#chat-form",
+            props: {
+                message: String
+            },
+            methods: {
+                sendMessage: async function () {
+                    socket.emit("message",
+                        {
+                            "sender": await get_usernick(),
+                            "message": this.message
+                        }
+                    )
+                    console.log("Message send!");
+                }
+            },
+            delimiters: ['[[',']]']
+        });
+    </script>
 </body>
 </html>
