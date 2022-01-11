@@ -2,10 +2,8 @@ import logging
 
 import socketio
 from fastapi import FastAPI, Request, Response
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.staticfiles import StaticFiles
 
 X_AUTHORIZATION = 'X-Authorization'
 
@@ -16,9 +14,24 @@ logging.basicConfig(
 log = logging.getLogger('nbt')
 
 # Init stuff for further usage
-templates = Jinja2Templates(directory="templates")
-sio = socketio.AsyncServer(async_mode='asgi') # cors_allowed_origins='*',
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=["*"]) # cors_allowed_origins='*',
 app = FastAPI()
+# Add cors
+origins = [
+    "http://localhost:8080",
+    "http://localhost:8080/chat",
+    "http://localhost:8080/*",
+    "http://localhost:8080/socket.io",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # There is some problem about how to start socketio with FastAPI
 # I found some help in these links:
 # https://github.com/tiangolo/fastapi/issues/129
@@ -29,8 +42,6 @@ sio_app = socketio.ASGIApp(
     static_files={'/': 'page.html'} # I.e. link html page which should be communicated with server ??? (not sure here)
 )
 app.mount('/sio', sio_app) # Mount socket-io app to some page
-# Mount templates
-app.mount("/static", StaticFiles(directory="templates"), name="static")
 
 
 
@@ -85,11 +96,6 @@ async def register_user(user: RegisterValidator, response: Response):
     return user.json()
 
 
-@app.get('/')
-def get_home(request: Request):
-    return templates.TemplateResponse('home.html', {"request": request})
-
-
-@app.get('/chat', response_class=HTMLResponse)
-def get_chat(request: Request):
-    return templates.TemplateResponse("chat.html", {"request": request})
+@app.get("/ping")
+async def test_ping():
+    return "Hello from backend!"
