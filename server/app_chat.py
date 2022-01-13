@@ -9,8 +9,7 @@ X_AUTHORIZATION = 'X-Authorization'
 app = FastAPI()
 # Add cors
 origins = [
-     "http://localhost:8080",
-     "http://amritb.github.io/socketio-client-tool/",
+     "http://localhost:8080"
 ]
 
 app.add_middleware(

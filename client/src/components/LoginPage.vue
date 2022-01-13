@@ -30,7 +30,7 @@ export default {
       console.log(this.nickname);
       alert(`Start chat with user nickname=${this.nickname}!`);
 
-      const path = 'http://127.0.0.1:80/api/register';
+      const path = 'http://127.0.0.1:3117/api/register';
       axios.post(path, {
         username: this.nickname,
       }).then(
