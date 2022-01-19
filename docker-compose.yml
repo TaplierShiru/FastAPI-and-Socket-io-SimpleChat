@@ -1,0 +1,17 @@
+version: "3"
+services:
+  web:
+    container_name: web_module
+    build:
+      context: client
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+
+  backend:
+    container_name: backend_module
+    build:
+      context: server
+      dockerfile: Dockerfile
+    ports:
+      - "3117:3117"
